@@ -244,6 +244,12 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	}()
 	// write loop -- take messages from response and write to websocket
 	scanner := bufio.NewScanner(responseBodyR)
+
+	var scannerBuf []byte
+	if p.maxRespBodyBufferBytes > 0 {
+		scannerBuf = make([]byte, 0, 64*1024)
+		scanner.Buffer(scannerBuf, p.maxRespBodyBufferBytes)
+	}
 	sb := strings.Builder{}
 	for scanner.Scan() {
 		if len(scanner.Bytes()) == 0 {
