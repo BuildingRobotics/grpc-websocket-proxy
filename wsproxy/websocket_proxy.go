@@ -255,9 +255,7 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 		// TODO this is super hacky and should probably be replaced with a smart solution involving stacks/counting
 		// close and open parantheses, however if this works lets move on with our lives and make this our next interview
 		// question
-		if line != "}" {
-			sb.WriteString(line)
-		} else {
+		if line == "}" {
 			if err = conn.WriteMessage(websocket.TextMessage, []byte(sb.String())); err != nil {
 				p.logger.Warnln("[write] error writing websocket message:", err)
 				return
