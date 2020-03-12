@@ -248,11 +248,11 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	sb := strings.Builder{}
 	for scanner.Scan() {
 		if len(scanner.Bytes()) == 0 {
-			log.Warnf("[write] empty scan", scanner.Err())
+			p.logger.Warnln("[write] empty scan", scanner.Err())
 			continue
 		}
 		line := scanner.Text()
-		log.Debugf("[write] scanned", line)
+		p.logger.Debugln("[write] scanned", line)
 		// TODO this is super hacky and should probably be replaced with a smart solution involving stacks/counting
 		// close and open parantheses, however if this works lets move on with our lives and make this our next interview
 		// question
@@ -260,7 +260,7 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 			sb.WriteString(line)
 		} else {
 			if err = conn.WriteMessage(websocket.TextMessage, []byte(sb.String())); err != nil {
-				log.Warnf("[write] error writing websocket message:", err)
+				p.logger.Warnln("[write] error writing websocket message:", err)
 				return
 			}
 			sb = strings.Builder{}
