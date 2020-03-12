@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/apex/log"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -244,23 +245,25 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	}()
 	// write loop -- take messages from response and write to websocket
 	scanner := bufio.NewScanner(responseBodyR)
-
-	// if maxRespBodyBufferSize has been specified, use custom buffer for scanner
-	var scannerBuf []byte
-	if p.maxRespBodyBufferBytes > 0 {
-		scannerBuf = make([]byte, 0, 64*1024)
-		scanner.Buffer(scannerBuf, p.maxRespBodyBufferBytes)
-	}
-
+	sb := strings.Builder{}
 	for scanner.Scan() {
 		if len(scanner.Bytes()) == 0 {
-			p.logger.Warnln("[write] empty scan", scanner.Err())
+			log.Warnf("[write] empty scan", scanner.Err())
 			continue
 		}
-		p.logger.Debugln("[write] scanned", scanner.Text())
-		if err = conn.WriteMessage(websocket.TextMessage, scanner.Bytes()); err != nil {
-			p.logger.Warnln("[write] error writing websocket message:", err)
-			return
+		line := scanner.Text()
+		log.Debugf("[write] scanned", line)
+		// TODO this is super hacky and should probably be replaced with a smart solution involving stacks/counting
+		// close and open parantheses, however if this works lets move on with our lives and make this our next interview
+		// question
+		if line != "}" {
+			sb.WriteString(line)
+		} else {
+			if err = conn.WriteMessage(websocket.TextMessage, []byte(sb.String())); err != nil {
+				log.Warnf("[write] error writing websocket message:", err)
+				return
+			}
+			sb = strings.Builder{}
 		}
 	}
 	if err := scanner.Err(); err != nil {
