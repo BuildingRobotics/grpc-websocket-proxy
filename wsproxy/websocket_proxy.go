@@ -252,6 +252,7 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 		}
 		line := scanner.Text()
 		p.logger.Debugln("[write] scanned", line)
+		sb.WriteString(line)
 		// TODO this is super hacky and should probably be replaced with a smart solution involving stacks/counting
 		// close and open parantheses, however if this works lets move on with our lives and make this our next interview
 		// question
