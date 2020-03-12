@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/apex/log"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
